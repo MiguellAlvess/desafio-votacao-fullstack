@@ -68,4 +68,21 @@ class VotingSessionRepositoryTest {
         assertThat(foundSession.get().proposal().id())
                 .isEqualTo(proposal.id());
     }
+
+    @Test
+    void shouldCheckWhetherVotingSessionExistsByProposalId() {
+        var proposal = proposalRepository.save(
+                new Proposal(
+                        "Annual budget approval",
+                        "Voting for approval of the annual budget"));
+        votingSessionRepository.save(
+                new VotingSession(
+                        proposal,
+                        Duration.ofMinutes(5),
+                        LocalDateTime.of(2026, 9, 14, 14, 0)));
+
+        var exists = votingSessionRepository.existsByProposalId(proposal.id());
+
+        assertThat(exists).isTrue();
+    }
 }
