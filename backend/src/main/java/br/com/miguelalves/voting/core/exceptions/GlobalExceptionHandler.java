@@ -45,6 +45,19 @@ public class GlobalExceptionHandler {
                                 request.getRequestURI());
         }
 
+        @ExceptionHandler({
+                        InvalidCpfException.class,
+                        AssociateUnableToVoteException.class
+        })
+        public ResponseEntity<ApiErrorResponse> handleVotingEligibility(
+                        RuntimeException exception,
+                        HttpServletRequest request) {
+                return buildResponse(
+                                HttpStatus.NOT_FOUND,
+                                exception.getMessage(),
+                                request.getRequestURI());
+        }
+
         @ExceptionHandler(MethodArgumentNotValidException.class)
         public ResponseEntity<ApiErrorResponse> handleValidationException(
                         MethodArgumentNotValidException exception,
