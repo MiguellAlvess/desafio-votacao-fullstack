@@ -12,6 +12,8 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import br.com.miguelalves.voting.associate.domain.Associate;
+import br.com.miguelalves.voting.associate.repository.AssociateRepository;
 import br.com.miguelalves.voting.proposal.domain.Proposal;
 import br.com.miguelalves.voting.proposal.repository.ProposalRepository;
 import br.com.miguelalves.voting.vote.domain.Vote;
@@ -23,102 +25,123 @@ import br.com.miguelalves.voting.votingsession.repository.VotingSessionRepositor
 @DataJpaTest
 class VoteRepositoryTest {
 
-    @Container
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17");
+        @Container
+        @ServiceConnection
+        static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17");
 
-    @Autowired
-    private VoteRepository voteRepository;
+        @Autowired
+        private VoteRepository voteRepository;
 
-    @Autowired
-    private VotingSessionRepository votingSessionRepository;
+        @Autowired
+        private VotingSessionRepository votingSessionRepository;
 
-    @Autowired
-    private ProposalRepository proposalRepository;
+        @Autowired
+        private ProposalRepository proposalRepository;
 
-    @Test
-    void shouldSaveVote() {
-        var votingSession = createAndSaveVotingSession();
+        @Autowired
+        private AssociateRepository associateRepository;
 
-        var createdAt = LocalDateTime.of(2026, 9, 14, 14, 2);
+        @Test
+        void shouldSaveVote() {
+                var votingSession = createAndSaveVotingSession();
+                var associate = createAndSaveAssociate();
+                var createdAt = LocalDateTime.of(
+                                2026, 9, 14, 14, 2);
+                var vote = new Vote(
+                                votingSession,
+                                associate,
+                                VoteChoice.YES,
+                                createdAt);
 
-        var vote = new Vote(
-                votingSession,
-                "associate-123",
-                VoteChoice.YES,
-                createdAt);
+                var savedVote = voteRepository.save(vote);
 
-        var savedVote = voteRepository.save(vote);
+                assertThat(savedVote.id())
+                                .isNotNull();
+                assertThat(
+                                savedVote.votingSession().id())
+                                .isEqualTo(votingSession.id());
+                assertThat(
+                                savedVote.associate().id())
+                                .isEqualTo(associate.id());
+                assertThat(savedVote.choice())
+                                .isEqualTo(VoteChoice.YES);
+                assertThat(savedVote.createdAt())
+                                .isEqualTo(createdAt);
+        }
 
-        assertThat(savedVote.id()).isNotNull();
-        assertThat(savedVote.votingSession().id())
-                .isEqualTo(votingSession.id());
-        assertThat(savedVote.associateId())
-                .isEqualTo("associate-123");
-        assertThat(savedVote.choice())
-                .isEqualTo(VoteChoice.YES);
-        assertThat(savedVote.createdAt())
-                .isEqualTo(createdAt);
-    }
+        @Test
+        void shouldFindVoteById() {
+                var votingSession = createAndSaveVotingSession();
+                var associate = createAndSaveAssociate();
 
-    @Test
-    void shouldFindVoteById() {
-        var votingSession = createAndSaveVotingSession();
+                var vote = voteRepository.save(
+                                new Vote(
+                                                votingSession,
+                                                associate,
+                                                VoteChoice.NO,
+                                                LocalDateTime.of(
+                                                                2026, 9, 14, 14, 2)));
+                var foundVote = voteRepository.findById(
+                                vote.id());
 
-        var vote = voteRepository.save(
-                new Vote(
-                        votingSession,
-                        "associate-123",
-                        VoteChoice.NO,
-                        LocalDateTime.of(2026, 9, 14, 14, 2)));
+                assertThat(foundVote).isPresent();
+                assertThat(
+                                foundVote.get().associate().id())
+                                .isEqualTo(associate.id());
+                assertThat(
+                                foundVote.get().choice())
+                                .isEqualTo(VoteChoice.NO);
+        }
 
-        var foundVote = voteRepository.findById(vote.id());
+        @Test
+        void shouldReturnTrueWhenAssociateAlreadyVotedInSession() {
+                var votingSession = createAndSaveVotingSession();
+                var associate = createAndSaveAssociate();
+                voteRepository.save(
+                                new Vote(
+                                                votingSession,
+                                                associate,
+                                                VoteChoice.YES,
+                                                LocalDateTime.of(
+                                                                2026, 9, 14, 14, 2)));
 
-        assertThat(foundVote).isPresent();
-        assertThat(foundVote.get().associateId())
-                .isEqualTo("associate-123");
-        assertThat(foundVote.get().choice())
-                .isEqualTo(VoteChoice.NO);
-    }
+                var exists = voteRepository
+                                .existsByVotingSession_IdAndAssociate_Id(
+                                                votingSession.id(),
+                                                associate.id());
 
-    @Test
-    void shouldReturnTrueWhenAssociateAlreadyVotedInSession() {
-        var votingSession = createAndSaveVotingSession();
+                assertThat(exists).isTrue();
+        }
 
-        voteRepository.save(
-                new Vote(
-                        votingSession,
-                        "associate-123",
-                        VoteChoice.YES,
-                        LocalDateTime.of(2026, 9, 14, 14, 2)));
-        var exists = voteRepository.existsByVotingSessionIdAndAssociateId(
-                votingSession.id(),
-                "associate-123");
+        @Test
+        void shouldReturnFalseWhenAssociateHasNotVotedInSession() {
+                var votingSession = createAndSaveVotingSession();
 
-        assertThat(exists).isTrue();
-    }
+                var associate = createAndSaveAssociate();
+                var exists = voteRepository
+                                .existsByVotingSession_IdAndAssociate_Id(
+                                                votingSession.id(),
+                                                associate.id());
 
-    @Test
-    void shouldReturnFalseWhenAssociateHasNotVotedInSession() {
-        var votingSession = createAndSaveVotingSession();
+                assertThat(exists).isFalse();
+        }
 
-        var exists = voteRepository.existsByVotingSessionIdAndAssociateId(
-                votingSession.id(),
-                "associate-999");
+        private Associate createAndSaveAssociate() {
+                return associateRepository.save(
+                                new Associate("12345678901"));
+        }
 
-        assertThat(exists).isFalse();
-    }
+        private VotingSession createAndSaveVotingSession() {
+                var proposal = proposalRepository.save(
+                                new Proposal(
+                                                "Annual budget approval",
+                                                "Voting for approval of the annual budget"));
 
-    private VotingSession createAndSaveVotingSession() {
-        var proposal = proposalRepository.save(
-                new Proposal(
-                        "Annual budget approval",
-                        "Voting for approval of the annual budget"));
-
-        return votingSessionRepository.save(
-                new VotingSession(
-                        proposal,
-                        Duration.ofMinutes(5),
-                        LocalDateTime.of(2026, 9, 14, 14, 0)));
-    }
+                return votingSessionRepository.save(
+                                new VotingSession(
+                                                proposal,
+                                                Duration.ofMinutes(5),
+                                                LocalDateTime.of(
+                                                                2026, 9, 14, 14, 0)));
+        }
 }
