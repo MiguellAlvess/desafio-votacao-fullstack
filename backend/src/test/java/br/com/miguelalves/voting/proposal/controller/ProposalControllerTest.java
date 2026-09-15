@@ -1,0 +1,120 @@
+package br.com.miguelalves.voting.proposal.controller;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+import br.com.miguelalves.voting.core.exceptions.GlobalExceptionHandler;
+import br.com.miguelalves.voting.proposal.dto.ProposalResponse;
+import br.com.miguelalves.voting.proposal.service.ProposalService;
+
+@WebMvcTest(ProposalController.class)
+@Import(GlobalExceptionHandler.class)
+class ProposalControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockitoBean
+    private ProposalService proposalService;
+
+    @Test
+    void shouldCreateProposal() throws Exception {
+        var createdAt = LocalDateTime.of(2026, 9, 15, 10, 30);
+        var response = new ProposalResponse(
+                1L,
+                "Annual budget approval",
+                "Voting for approval of the annual budget",
+                createdAt);
+
+        when(proposalService.create(any()))
+                .thenReturn(response);
+
+        mockMvc.perform(
+                post("/api/v1/proposals")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "title": "Annual budget approval",
+                                  "description": "Voting for approval of the annual budget"
+                                }
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.title")
+                        .value("Annual budget approval"))
+                .andExpect(jsonPath("$.description")
+                        .value("Voting for approval of the annual budget"))
+                .andExpect(jsonPath("$.createdAt")
+                        .value("2026-09-15T10:30:00"));
+    }
+
+    @Test
+    void shouldListProposals() throws Exception {
+        var firstResponse = new ProposalResponse(
+                1L,
+                "Annual budget approval",
+                "Voting for approval of the annual budget",
+                LocalDateTime.of(2026, 9, 15, 10, 30));
+        var secondResponse = new ProposalResponse(
+                2L,
+                "Board election",
+                null,
+                LocalDateTime.of(2026, 9, 15, 11, 0));
+
+        when(proposalService.findAll())
+                .thenReturn(List.of(firstResponse, secondResponse));
+
+        mockMvc.perform(get("/api/v1/proposals"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].id").value(1))
+                .andExpect(jsonPath("$[0].title")
+                        .value("Annual budget approval"))
+                .andExpect(jsonPath("$[0].description")
+                        .value("Voting for approval of the annual budget"))
+                .andExpect(jsonPath("$[0].createdAt")
+                        .value("2026-09-15T10:30:00"))
+                .andExpect(jsonPath("$[1].id").value(2))
+                .andExpect(jsonPath("$[1].title")
+                        .value("Board election"))
+                .andExpect(jsonPath("$[1].description").isEmpty())
+                .andExpect(jsonPath("$[1].createdAt")
+                        .value("2026-09-15T11:00:00"));
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenTitleIsBlank() throws Exception {
+        mockMvc.perform(
+                post("/api/v1/proposals")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "title": "",
+                                  "description": "Description"
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message")
+                        .value("title: Proposal title cannot be blank"))
+                .andExpect(jsonPath("$.path")
+                        .value("/api/v1/proposals"))
+                .andExpect(jsonPath("$.timestamp").exists());
+    }
+}
