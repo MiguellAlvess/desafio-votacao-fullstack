@@ -25,6 +25,26 @@ public class GlobalExceptionHandler {
                                 request.getRequestURI());
         }
 
+        @ExceptionHandler(ProposalNotFoundException.class)
+        public ResponseEntity<ApiErrorResponse> handleProposalNotFound(
+                        ProposalNotFoundException exception,
+                        HttpServletRequest request) {
+                return buildResponse(
+                                HttpStatus.NOT_FOUND,
+                                exception.getMessage(),
+                                request.getRequestURI());
+        }
+
+        @ExceptionHandler(VotingSessionAlreadyExistsException.class)
+        public ResponseEntity<ApiErrorResponse> handleVotingSessionAlreadyExists(
+                        VotingSessionAlreadyExistsException exception,
+                        HttpServletRequest request) {
+                return buildResponse(
+                                HttpStatus.CONFLICT,
+                                exception.getMessage(),
+                                request.getRequestURI());
+        }
+
         @ExceptionHandler(MethodArgumentNotValidException.class)
         public ResponseEntity<ApiErrorResponse> handleValidationException(
                         MethodArgumentNotValidException exception,
