@@ -6,7 +6,7 @@ import br.com.miguelalves.voting.vote.domain.Vote;
 
 public interface VoteRepository extends JpaRepository<Vote, Long> {
 
-    boolean existsByVotingSessionIdAndAssociateId(
+    boolean existsByVotingSession_IdAndAssociate_Id(
             Long votingSessionId,
-            String associateId);
+            Long associateId);
 }
