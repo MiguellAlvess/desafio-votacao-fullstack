@@ -3,7 +3,6 @@ package br.com.miguelalves.voting.vote.controller;
 import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.Test;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -12,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -26,6 +26,7 @@ import br.com.miguelalves.voting.core.exceptions.VotingSessionNotFoundException;
 import br.com.miguelalves.voting.vote.domain.VoteChoice;
 import br.com.miguelalves.voting.vote.dto.CreateVoteRequest;
 import br.com.miguelalves.voting.vote.dto.VoteResponse;
+import br.com.miguelalves.voting.vote.dto.VotingResultResponse;
 import br.com.miguelalves.voting.vote.service.VoteService;
 
 @WebMvcTest(VoteController.class)
@@ -33,6 +34,7 @@ import br.com.miguelalves.voting.vote.service.VoteService;
 class VoteControllerTest {
 
         private static final String ENDPOINT = "/api/v1/voting-sessions/2/votes";
+        private static final String RESULT_ENDPOINT = "/api/v1/voting-sessions/2/result";
         private static final String VALID_REQUEST = """
                         {
                           "associateId": 1,
@@ -184,7 +186,39 @@ class VoteControllerTest {
                                                 .value("choice: Vote choice cannot be null"))
                                 .andExpect(jsonPath("$.path").value(ENDPOINT))
                                 .andExpect(jsonPath("$.timestamp").exists());
-                verifyNoInteractions(voteService);
+        }
+
+        @Test
+        void shouldReturnVotingResult() throws Exception {
+                var response = new VotingResultResponse(
+                                2L,
+                                3,
+                                2,
+                                5);
+                when(voteService.getResult(2L)).thenReturn(response);
+
+                mockMvc.perform(get(RESULT_ENDPOINT))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.votingSessionId").value(2))
+                                .andExpect(jsonPath("$.yesVotes").value(3))
+                                .andExpect(jsonPath("$.noVotes").value(2))
+                                .andExpect(jsonPath("$.totalVotes").value(5))
+                                .andExpect(jsonPath("$.result").doesNotExist());
+        }
+
+        @Test
+        void shouldReturnNotFoundWhenVotingSessionDoesNotExistForResult() throws Exception {
+                when(voteService.getResult(2L))
+                                .thenThrow(new VotingSessionNotFoundException(2L));
+
+                mockMvc.perform(get(RESULT_ENDPOINT))
+                                .andExpect(status().isNotFound())
+                                .andExpect(jsonPath("$.status").value(404))
+                                .andExpect(jsonPath("$.error").value("Not Found"))
+                                .andExpect(jsonPath("$.message")
+                                                .value("Voting session with ID 2 was not found"))
+                                .andExpect(jsonPath("$.path").value(RESULT_ENDPOINT))
+                                .andExpect(jsonPath("$.timestamp").exists());
         }
 
         private ResultActions postVote(String request) throws Exception {
