@@ -32,4 +32,12 @@ public class AssociateService {
         var savedAssociate = associateRepository.save(associate);
         return associateMapper.toResponse(savedAssociate);
     }
+
+    @Transactional
+    public AssociateResponse identify(CreateAssociateRequest request) {
+        var cpf = request.cpf().trim();
+        var associate = associateRepository.findByCpf(cpf)
+                .orElseGet(() -> associateRepository.save(new Associate(cpf)));
+        return associateMapper.toResponse(associate);
+    }
 }

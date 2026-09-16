@@ -1,5 +1,7 @@
 package br.com.miguelalves.voting.associate.repository;
 
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import br.com.miguelalves.voting.associate.domain.Associate;
@@ -8,4 +10,6 @@ public interface AssociateRepository
         extends JpaRepository<Associate, Long> {
 
     boolean existsByCpf(String cpf);
+
+    Optional<Associate> findByCpf(String cpf);
 }

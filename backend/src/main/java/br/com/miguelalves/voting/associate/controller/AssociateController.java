@@ -30,4 +30,10 @@ public class AssociateController {
                 .status(HttpStatus.CREATED)
                 .body(response);
     }
+
+    @PostMapping("/identify")
+    public ResponseEntity<AssociateResponse> identify(
+            @Valid @RequestBody CreateAssociateRequest request) {
+        return ResponseEntity.ok(associateService.identify(request));
+    }
 }
