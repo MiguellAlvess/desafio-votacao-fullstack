@@ -5,15 +5,19 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
+import java.time.Duration;
 import java.util.Optional;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import br.com.miguelalves.voting.core.exceptions.ProposalNotFoundException;
@@ -22,6 +26,7 @@ import br.com.miguelalves.voting.proposal.domain.Proposal;
 import br.com.miguelalves.voting.proposal.repository.ProposalRepository;
 import br.com.miguelalves.voting.votingsession.domain.VotingSession;
 import br.com.miguelalves.voting.votingsession.dto.OpenVotingSessionRequest;
+import br.com.miguelalves.voting.votingsession.dto.OpenVotingSessionResponse;
 import br.com.miguelalves.voting.votingsession.dto.VotingSessionResponse;
 import br.com.miguelalves.voting.votingsession.mapper.VotingSessionMapper;
 import br.com.miguelalves.voting.votingsession.repository.VotingSessionRepository;
@@ -135,6 +140,49 @@ class VotingSessionServiceTest {
 
         assertThat(result).isEqualTo(expectedResponse);
         verify(votingSessionRepository).save(any(VotingSession.class));
+    }
+
+    @Test
+    void shouldReturnOpenVotingSessions() {
+        var first = new VotingSession(
+                new Proposal("First proposal", null),
+                Duration.ofMinutes(5),
+                LocalDateTime.now().minusMinutes(1));
+        var second = new VotingSession(
+                new Proposal("Second proposal", null),
+                Duration.ofMinutes(10),
+                LocalDateTime.now().minusMinutes(1));
+        var firstResponse = new OpenVotingSessionResponse(
+                1L, 10L, "First proposal", first.startsAt(), first.endsAt());
+        var secondResponse = new OpenVotingSessionResponse(
+                2L, 20L, "Second proposal", second.startsAt(), second.endsAt());
+        when(votingSessionRepository.findAllByStartsAtLessThanEqualAndEndsAtAfter(
+                any(LocalDateTime.class), any(LocalDateTime.class)))
+                .thenReturn(List.of(first, second));
+        when(votingSessionMapper.toOpenResponse(first)).thenReturn(firstResponse);
+        when(votingSessionMapper.toOpenResponse(second)).thenReturn(secondResponse);
+
+        var responses = votingSessionService.findOpenSessions();
+
+        assertThat(responses).containsExactly(firstResponse, secondResponse);
+        verify(votingSessionMapper).toOpenResponse(first);
+        verify(votingSessionMapper).toOpenResponse(second);
+        var time = ArgumentCaptor.forClass(LocalDateTime.class);
+        verify(votingSessionRepository)
+                .findAllByStartsAtLessThanEqualAndEndsAtAfter(
+                        time.capture(), time.capture());
+        assertThat(time.getAllValues().get(0))
+                .isEqualTo(time.getAllValues().get(1));
+    }
+
+    @Test
+    void shouldReturnEmptyListWhenThereAreNoOpenSessions() {
+        when(votingSessionRepository.findAllByStartsAtLessThanEqualAndEndsAtAfter(
+                any(LocalDateTime.class), any(LocalDateTime.class)))
+                .thenReturn(List.of());
+
+        assertThat(votingSessionService.findOpenSessions()).isEmpty();
+        verifyNoInteractions(votingSessionMapper);
     }
 
     private Proposal createProposal() {

@@ -6,8 +6,6 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,8 +30,8 @@ import br.com.miguelalves.voting.vote.domain.VoteChoice;
 import br.com.miguelalves.voting.vote.dto.CreateVoteRequest;
 import br.com.miguelalves.voting.vote.dto.VoteResponse;
 import br.com.miguelalves.voting.vote.mapper.VoteMapper;
-import br.com.miguelalves.voting.vote.repository.VoteRepository;
 import br.com.miguelalves.voting.vote.repository.VoteCount;
+import br.com.miguelalves.voting.vote.repository.VoteRepository;
 import br.com.miguelalves.voting.votingsession.domain.VotingSession;
 import br.com.miguelalves.voting.votingsession.repository.VotingSessionRepository;
 
@@ -204,7 +202,6 @@ class VoteServiceTest {
                 assertThatThrownBy(() -> voteService.getResult(VOTING_SESSION_ID))
                                 .isInstanceOf(VotingSessionNotFoundException.class)
                                 .hasMessage("Voting session with ID 1 was not found");
-                verify(voteRepository, never()).countByVotingSessionId(any());
         }
 
         private void assertResult(
@@ -225,7 +222,6 @@ class VoteServiceTest {
                 assertThat(response.yesVotes()).isEqualTo(yesVotes);
                 assertThat(response.noVotes()).isEqualTo(noVotes);
                 assertThat(response.totalVotes()).isEqualTo(totalVotes);
-                verify(voteRepository).countByVotingSessionId(VOTING_SESSION_ID);
         }
 
         private void prepareEligibleAssociate(

@@ -1,6 +1,7 @@
 package br.com.miguelalves.voting.votingsession.controller;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.any;
@@ -12,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -19,6 +21,7 @@ import br.com.miguelalves.voting.core.exceptions.GlobalExceptionHandler;
 import br.com.miguelalves.voting.core.exceptions.ProposalNotFoundException;
 import br.com.miguelalves.voting.core.exceptions.VotingSessionAlreadyExistsException;
 import br.com.miguelalves.voting.votingsession.dto.VotingSessionResponse;
+import br.com.miguelalves.voting.votingsession.dto.OpenVotingSessionResponse;
 import br.com.miguelalves.voting.votingsession.service.VotingSessionService;
 
 @WebMvcTest(VotingSessionController.class)
@@ -26,6 +29,7 @@ import br.com.miguelalves.voting.votingsession.service.VotingSessionService;
 class VotingSessionControllerTest {
 
         private static final String ENDPOINT = "/api/v1/proposals/10/sessions";
+        private static final String OPEN_ENDPOINT = "/api/v1/voting-sessions/open";
 
         @Autowired
         private MockMvc mockMvc;
@@ -113,6 +117,40 @@ class VotingSessionControllerTest {
                                                 .contentType(MediaType.APPLICATION_JSON)
                                                 .content("{}"))
                                 .andExpect(status().isCreated());
+        }
+
+        @Test
+        void shouldReturnOpenVotingSessions() throws Exception {
+                var response = new OpenVotingSessionResponse(
+                                1L,
+                                10L,
+                                "Aquisição de novos equipamentos",
+                                LocalDateTime.of(2026, 9, 16, 10, 0),
+                                LocalDateTime.of(2026, 9, 16, 10, 10));
+                when(votingSessionService.findOpenSessions())
+                                .thenReturn(List.of(response));
+
+                mockMvc.perform(get(OPEN_ENDPOINT))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.length()").value(1))
+                                .andExpect(jsonPath("$[0].id").value(1))
+                                .andExpect(jsonPath("$[0].proposalId").value(10))
+                                .andExpect(jsonPath("$[0].proposalTitle")
+                                                .value("Aquisição de novos equipamentos"))
+                                .andExpect(jsonPath("$[0].startsAt")
+                                                .value("2026-09-16T10:00:00"))
+                                .andExpect(jsonPath("$[0].endsAt")
+                                                .value("2026-09-16T10:10:00"));
+        }
+
+        @Test
+        void shouldReturnEmptyListWhenThereAreNoOpenSessions() throws Exception {
+                when(votingSessionService.findOpenSessions())
+                                .thenReturn(List.of());
+
+                mockMvc.perform(get(OPEN_ENDPOINT))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.length()").value(0));
         }
 
         private VotingSessionResponse createResponse(long durationInMinutes) {
