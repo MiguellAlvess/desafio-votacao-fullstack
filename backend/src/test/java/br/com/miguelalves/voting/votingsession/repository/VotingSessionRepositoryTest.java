@@ -2,6 +2,7 @@ package br.com.miguelalves.voting.votingsession.repository;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
@@ -19,6 +20,8 @@ import br.com.miguelalves.voting.votingsession.domain.VotingSession;
 @Testcontainers
 @DataJpaTest
 class VotingSessionRepositoryTest {
+
+    private static final LocalDateTime NOW = LocalDateTime.of(2026, 9, 16, 10, 0);
 
     @Container
     @ServiceConnection
@@ -84,5 +87,58 @@ class VotingSessionRepositoryTest {
         var exists = votingSessionRepository.existsByProposalId(proposal.id());
 
         assertThat(exists).isTrue();
+    }
+
+    @Test
+    void shouldReturnSessionThatIsOpen() {
+        var openSession = saveSession("Open proposal", NOW, Duration.ofMinutes(5));
+
+        var sessions = findOpenSessions();
+
+        assertThat(sessions).extracting(VotingSession::id)
+                .containsExactly(openSession.id());
+    }
+
+    @Test
+    void shouldNotReturnSessionThatHasNotStarted() {
+        saveSession("Future proposal", NOW.plusSeconds(1), Duration.ofMinutes(5));
+
+        assertThat(findOpenSessions()).isEmpty();
+    }
+
+    @Test
+    void shouldNotReturnSessionThatHasEnded() {
+        saveSession("Ended proposal", NOW.minusMinutes(5), Duration.ofMinutes(5));
+
+        assertThat(findOpenSessions()).isEmpty();
+    }
+
+    @Test
+    void shouldReturnMultipleOpenSessions() {
+        var first = saveSession("First proposal", NOW.minusMinutes(2), Duration.ofMinutes(5));
+        var second = saveSession("Second proposal", NOW, Duration.ofMinutes(5));
+        saveSession("Future proposal", NOW.plusMinutes(1), Duration.ofMinutes(5));
+
+        assertThat(findOpenSessions()).extracting(VotingSession::id)
+                .containsExactlyInAnyOrder(first.id(), second.id());
+    }
+
+    @Test
+    void shouldReturnEmptyListWhenThereAreNoSessions() {
+        assertThat(findOpenSessions()).isEmpty();
+    }
+
+    private List<VotingSession> findOpenSessions() {
+        return votingSessionRepository.findAllByStartsAtLessThanEqualAndEndsAtAfter(
+                NOW,
+                NOW);
+    }
+
+    private VotingSession saveSession(
+            String proposalTitle,
+            LocalDateTime startsAt,
+            Duration duration) {
+        var proposal = proposalRepository.save(new Proposal(proposalTitle, null));
+        return votingSessionRepository.save(new VotingSession(proposal, duration, startsAt));
     }
 }
