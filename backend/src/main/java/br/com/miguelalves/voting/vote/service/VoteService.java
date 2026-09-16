@@ -16,6 +16,7 @@ import br.com.miguelalves.voting.external.eligibility.VotingEligibility;
 import br.com.miguelalves.voting.vote.domain.Vote;
 import br.com.miguelalves.voting.vote.dto.CreateVoteRequest;
 import br.com.miguelalves.voting.vote.dto.VoteResponse;
+import br.com.miguelalves.voting.vote.dto.VotingResultResponse;
 import br.com.miguelalves.voting.vote.mapper.VoteMapper;
 import br.com.miguelalves.voting.vote.repository.VoteRepository;
 import br.com.miguelalves.voting.votingsession.repository.VotingSessionRepository;
@@ -72,5 +73,20 @@ public class VoteService {
                 now);
         var savedVote = voteRepository.save(vote);
         return voteMapper.toResponse(savedVote);
+    }
+
+    @Transactional(readOnly = true)
+    public VotingResultResponse getResult(Long votingSessionId) {
+        votingSessionRepository.findById(votingSessionId)
+                .orElseThrow(() -> new VotingSessionNotFoundException(votingSessionId));
+
+        var count = voteRepository.countByVotingSessionId(votingSessionId);
+        var yesVotes = count.getYesVotes();
+        var noVotes = count.getNoVotes();
+        return new VotingResultResponse(
+                votingSessionId,
+                yesVotes,
+                noVotes,
+                yesVotes + noVotes);
     }
 }
