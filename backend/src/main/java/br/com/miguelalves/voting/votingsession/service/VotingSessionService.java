@@ -4,6 +4,8 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +21,8 @@ import br.com.miguelalves.voting.votingsession.repository.VotingSessionRepositor
 
 @Service
 public class VotingSessionService {
+
+    private static final Logger log = LoggerFactory.getLogger(VotingSessionService.class);
 
     private final VotingSessionRepository votingSessionRepository;
     private final ProposalRepository proposalRepository;
@@ -41,6 +45,7 @@ public class VotingSessionService {
                 .orElseThrow(() -> new ProposalNotFoundException(proposalId));
 
         if (votingSessionRepository.existsByProposalId(proposalId)) {
+            log.warn("Voting session opening rejected: session already exists. proposalId={}", proposalId);
             throw new VotingSessionAlreadyExistsException(proposalId);
         }
 
@@ -52,6 +57,8 @@ public class VotingSessionService {
                 duration,
                 LocalDateTime.now());
         var savedVotingSession = votingSessionRepository.save(votingSession);
+        log.info("Voting session opened. sessionId={}, proposalId={}, endsAt={}",
+                savedVotingSession.id(), proposalId, savedVotingSession.endsAt());
         return votingSessionMapper.toResponse(savedVotingSession);
     }
 

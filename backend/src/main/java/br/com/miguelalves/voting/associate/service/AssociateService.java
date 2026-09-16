@@ -1,5 +1,7 @@
 package br.com.miguelalves.voting.associate.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,6 +14,8 @@ import br.com.miguelalves.voting.core.exceptions.CpfAlreadyExistsException;
 
 @Service
 public class AssociateService {
+
+    private static final Logger log = LoggerFactory.getLogger(AssociateService.class);
 
     private final AssociateRepository associateRepository;
     private final AssociateMapper associateMapper;
@@ -26,10 +30,12 @@ public class AssociateService {
     @Transactional
     public AssociateResponse create(CreateAssociateRequest request) {
         if (associateRepository.existsByCpf(request.cpf())) {
+            log.warn("Associate creation rejected: CPF already registered");
             throw new CpfAlreadyExistsException(request.cpf());
         }
         var associate = new Associate(request.cpf());
         var savedAssociate = associateRepository.save(associate);
+        log.info("Associate created. associateId={}", savedAssociate.id());
         return associateMapper.toResponse(savedAssociate);
     }
 
@@ -38,6 +44,7 @@ public class AssociateService {
         var cpf = request.cpf().trim();
         var associate = associateRepository.findByCpf(cpf)
                 .orElseGet(() -> associateRepository.save(new Associate(cpf)));
+        log.info("Associate identified. associateId={}", associate.id());
         return associateMapper.toResponse(associate);
     }
 }
