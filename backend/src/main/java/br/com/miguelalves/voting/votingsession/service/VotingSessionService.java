@@ -2,6 +2,7 @@ package br.com.miguelalves.voting.votingsession.service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,6 +12,7 @@ import br.com.miguelalves.voting.core.exceptions.VotingSessionAlreadyExistsExcep
 import br.com.miguelalves.voting.proposal.repository.ProposalRepository;
 import br.com.miguelalves.voting.votingsession.domain.VotingSession;
 import br.com.miguelalves.voting.votingsession.dto.OpenVotingSessionRequest;
+import br.com.miguelalves.voting.votingsession.dto.OpenVotingSessionResponse;
 import br.com.miguelalves.voting.votingsession.dto.VotingSessionResponse;
 import br.com.miguelalves.voting.votingsession.mapper.VotingSessionMapper;
 import br.com.miguelalves.voting.votingsession.repository.VotingSessionRepository;
@@ -51,5 +53,15 @@ public class VotingSessionService {
                 LocalDateTime.now());
         var savedVotingSession = votingSessionRepository.save(votingSession);
         return votingSessionMapper.toResponse(savedVotingSession);
+    }
+
+    @Transactional(readOnly = true)
+    public List<OpenVotingSessionResponse> findOpenSessions() {
+        var now = LocalDateTime.now();
+        return votingSessionRepository
+                .findAllByStartsAtLessThanEqualAndEndsAtAfter(now, now)
+                .stream()
+                .map(votingSessionMapper::toOpenResponse)
+                .toList();
     }
 }
