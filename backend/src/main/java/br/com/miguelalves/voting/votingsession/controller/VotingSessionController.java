@@ -16,9 +16,16 @@ import br.com.miguelalves.voting.votingsession.dto.OpenVotingSessionResponse;
 import br.com.miguelalves.voting.votingsession.dto.VotingSessionResponse;
 import br.com.miguelalves.voting.votingsession.service.VotingSessionService;
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import br.com.miguelalves.voting.core.api.response.ApiErrorResponse;
 
 @RestController
 @RequestMapping("/api/v1")
+@Tag(name = "Sessões de votação")
 public class VotingSessionController {
 
     private final VotingSessionService votingSessionService;
@@ -28,6 +35,12 @@ public class VotingSessionController {
     }
 
     @PostMapping("/proposals/{proposalId}/sessions")
+    @Operation(summary = "Abrir sessão de votação para uma pauta")
+    @ApiResponse(responseCode = "201", description = "Sessão aberta")
+    @ApiResponse(responseCode = "404", description = "Pauta não encontrada",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @ApiResponse(responseCode = "409", description = "Pauta já possui sessão",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public ResponseEntity<VotingSessionResponse> open(
             @PathVariable Long proposalId,
             @Valid @RequestBody OpenVotingSessionRequest request) {
@@ -38,6 +51,8 @@ public class VotingSessionController {
     }
 
     @GetMapping("/voting-sessions/open")
+    @Operation(summary = "Listar sessões abertas")
+    @ApiResponse(responseCode = "200", description = "Sessões abertas")
     public ResponseEntity<List<OpenVotingSessionResponse>> findOpenSessions() {
         return ResponseEntity.ok(votingSessionService.findOpenSessions());
     }

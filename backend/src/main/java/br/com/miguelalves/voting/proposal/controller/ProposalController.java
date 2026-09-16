@@ -14,9 +14,16 @@ import br.com.miguelalves.voting.proposal.dto.CreateProposalRequest;
 import br.com.miguelalves.voting.proposal.dto.ProposalResponse;
 import br.com.miguelalves.voting.proposal.service.ProposalService;
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import br.com.miguelalves.voting.core.api.response.ApiErrorResponse;
 
 @RestController
 @RequestMapping("/api/v1/proposals")
+@Tag(name = "Pautas")
 public class ProposalController {
 
     private final ProposalService proposalService;
@@ -26,6 +33,10 @@ public class ProposalController {
     }
 
     @PostMapping
+    @Operation(summary = "Cadastrar nova pauta")
+    @ApiResponse(responseCode = "201", description = "Pauta cadastrada")
+    @ApiResponse(responseCode = "400", description = "Título inválido",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public ResponseEntity<ProposalResponse> create(
             @Valid @RequestBody CreateProposalRequest request) {
         var response = proposalService.create(request);
@@ -35,6 +46,8 @@ public class ProposalController {
     }
 
     @GetMapping
+    @Operation(summary = "Listar pautas")
+    @ApiResponse(responseCode = "200", description = "Pautas cadastradas")
     public ResponseEntity<List<ProposalResponse>> findAll() {
         return ResponseEntity.ok(proposalService.findAll());
     }
