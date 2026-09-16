@@ -6,6 +6,8 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,6 +33,7 @@ import br.com.miguelalves.voting.vote.dto.CreateVoteRequest;
 import br.com.miguelalves.voting.vote.dto.VoteResponse;
 import br.com.miguelalves.voting.vote.mapper.VoteMapper;
 import br.com.miguelalves.voting.vote.repository.VoteRepository;
+import br.com.miguelalves.voting.vote.repository.VoteCount;
 import br.com.miguelalves.voting.votingsession.domain.VotingSession;
 import br.com.miguelalves.voting.votingsession.repository.VotingSessionRepository;
 
@@ -181,6 +184,48 @@ class VoteServiceTest {
                                 createRequest()))
                                 .isInstanceOf(InvalidCpfException.class)
                                 .hasMessage("CPF 52998224725 is invalid");
+        }
+
+        @Test
+        void shouldReturnVoteCounts() {
+                assertResult(3, 2, 5);
+        }
+
+        @Test
+        void shouldReturnZeroCountsWhenThereAreNoVotes() {
+                assertResult(0, 0, 0);
+        }
+
+        @Test
+        void shouldThrowWhenVotingSessionDoesNotExistForResult() {
+                when(votingSessionRepository.findById(VOTING_SESSION_ID))
+                                .thenReturn(Optional.empty());
+
+                assertThatThrownBy(() -> voteService.getResult(VOTING_SESSION_ID))
+                                .isInstanceOf(VotingSessionNotFoundException.class)
+                                .hasMessage("Voting session with ID 1 was not found");
+                verify(voteRepository, never()).countByVotingSessionId(any());
+        }
+
+        private void assertResult(
+                        long yesVotes,
+                        long noVotes,
+                        long totalVotes) {
+                var count = org.mockito.Mockito.mock(VoteCount.class);
+                when(votingSessionRepository.findById(VOTING_SESSION_ID))
+                                .thenReturn(Optional.of(createOpenVotingSession()));
+                when(voteRepository.countByVotingSessionId(VOTING_SESSION_ID))
+                                .thenReturn(count);
+                when(count.getYesVotes()).thenReturn(yesVotes);
+                when(count.getNoVotes()).thenReturn(noVotes);
+
+                var response = voteService.getResult(VOTING_SESSION_ID);
+
+                assertThat(response.votingSessionId()).isEqualTo(VOTING_SESSION_ID);
+                assertThat(response.yesVotes()).isEqualTo(yesVotes);
+                assertThat(response.noVotes()).isEqualTo(noVotes);
+                assertThat(response.totalVotes()).isEqualTo(totalVotes);
+                verify(voteRepository).countByVotingSessionId(VOTING_SESSION_ID);
         }
 
         private void prepareEligibleAssociate(
