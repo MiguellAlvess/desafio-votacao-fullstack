@@ -58,6 +58,32 @@ public class GlobalExceptionHandler {
                                 request.getRequestURI());
         }
 
+        @ExceptionHandler({
+                        VotingSessionNotFoundException.class,
+                        AssociateNotFoundException.class
+        })
+        public ResponseEntity<ApiErrorResponse> handleResourceNotFound(
+                        RuntimeException exception,
+                        HttpServletRequest request) {
+                return buildResponse(
+                                HttpStatus.NOT_FOUND,
+                                exception.getMessage(),
+                                request.getRequestURI());
+        }
+
+        @ExceptionHandler({
+                        VotingSessionClosedException.class,
+                        AssociateAlreadyVotedException.class
+        })
+        public ResponseEntity<ApiErrorResponse> handleVoteConflict(
+                        RuntimeException exception,
+                        HttpServletRequest request) {
+                return buildResponse(
+                                HttpStatus.CONFLICT,
+                                exception.getMessage(),
+                                request.getRequestURI());
+        }
+
         @ExceptionHandler(MethodArgumentNotValidException.class)
         public ResponseEntity<ApiErrorResponse> handleValidationException(
                         MethodArgumentNotValidException exception,
