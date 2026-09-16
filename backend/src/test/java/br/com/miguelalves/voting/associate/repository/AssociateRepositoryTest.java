@@ -65,4 +65,19 @@ class AssociateRepositoryTest {
 
                 assertThat(exists).isFalse();
         }
+
+        @Test
+        void shouldFindAssociateByCpf() {
+                var associate = associateRepository.save(new Associate("12345678909"));
+
+                var foundAssociate = associateRepository.findByCpf("12345678909");
+
+                assertThat(foundAssociate).isPresent();
+                assertThat(foundAssociate.get().id()).isEqualTo(associate.id());
+        }
+
+        @Test
+        void shouldReturnEmptyWhenCpfDoesNotExist() {
+                assertThat(associateRepository.findByCpf("12345678909")).isEmpty();
+        }
 }

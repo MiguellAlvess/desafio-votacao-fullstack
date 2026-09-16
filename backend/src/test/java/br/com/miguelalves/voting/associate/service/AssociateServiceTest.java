@@ -2,6 +2,9 @@ package br.com.miguelalves.voting.associate.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -72,5 +75,39 @@ class AssociateServiceTest {
         assertEquals(
                 "An associate with CPF 12345678901 already exists",
                 exception.getMessage());
+    }
+
+    @Test
+    void shouldReturnExistingAssociateWhenCpfIsAlreadyRegistered() {
+        var request = new CreateAssociateRequest(" 12345678909 ");
+        var associate = new Associate("12345678909");
+        var response = new AssociateResponse(1L, "12345678909");
+        when(associateRepository.findByCpf("12345678909"))
+                .thenReturn(Optional.of(associate));
+        when(associateMapper.toResponse(associate)).thenReturn(response);
+
+        var result = associateService.identify(request);
+
+        assertEquals(response, result);
+        verify(associateRepository, never()).save(any());
+        verify(associateMapper).toResponse(associate);
+    }
+
+    @Test
+    void shouldCreateAssociateWhenCpfIsNotRegistered() {
+        var request = new CreateAssociateRequest("12345678909");
+        var savedAssociate = new Associate("12345678909");
+        var response = new AssociateResponse(1L, "12345678909");
+        when(associateRepository.findByCpf("12345678909"))
+                .thenReturn(Optional.empty());
+        when(associateRepository.save(any(Associate.class)))
+                .thenReturn(savedAssociate);
+        when(associateMapper.toResponse(savedAssociate)).thenReturn(response);
+
+        var result = associateService.identify(request);
+
+        assertEquals(response, result);
+        verify(associateRepository).save(any(Associate.class));
+        verify(associateMapper).toResponse(savedAssociate);
     }
 }
