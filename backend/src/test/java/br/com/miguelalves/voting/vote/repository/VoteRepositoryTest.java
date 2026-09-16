@@ -126,6 +126,57 @@ class VoteRepositoryTest {
                 assertThat(exists).isFalse();
         }
 
+        @Test
+        void shouldCountYesAndNoVotes() {
+                var session = createAndSaveVotingSession();
+                saveVote(session, "52998224725", VoteChoice.YES);
+                saveVote(session, "11144477735", VoteChoice.YES);
+                saveVote(session, "12345678909", VoteChoice.YES);
+                saveVote(session, "98765432100", VoteChoice.NO);
+                saveVote(session, "16899535009", VoteChoice.NO);
+
+                var count = voteRepository.countByVotingSessionId(session.id());
+
+                assertThat(count.getYesVotes()).isEqualTo(3);
+                assertThat(count.getNoVotes()).isEqualTo(2);
+        }
+
+        @Test
+        void shouldReturnZeroCountsWhenSessionHasNoVotes() {
+                var session = createAndSaveVotingSession();
+
+                var count = voteRepository.countByVotingSessionId(session.id());
+
+                assertThat(count.getYesVotes()).isZero();
+                assertThat(count.getNoVotes()).isZero();
+        }
+
+        @Test
+        void shouldNotCountVotesFromAnotherSession() {
+                var session = createAndSaveVotingSession();
+                var otherProposal = proposalRepository.save(new Proposal("Other proposal", null));
+                var otherSession = votingSessionRepository.save(new VotingSession(
+                                otherProposal,
+                                Duration.ofMinutes(5),
+                                LocalDateTime.of(2026, 9, 14, 14, 0)));
+                saveVote(session, "52998224725", VoteChoice.YES);
+                saveVote(otherSession, "11144477735", VoteChoice.NO);
+
+                var count = voteRepository.countByVotingSessionId(session.id());
+
+                assertThat(count.getYesVotes()).isEqualTo(1);
+                assertThat(count.getNoVotes()).isZero();
+        }
+
+        private void saveVote(VotingSession session, String cpf, VoteChoice choice) {
+                var associate = associateRepository.save(new Associate(cpf));
+                voteRepository.save(new Vote(
+                                session,
+                                associate,
+                                choice,
+                                LocalDateTime.of(2026, 9, 14, 14, 2)));
+        }
+
         private Associate createAndSaveAssociate() {
                 return associateRepository.save(
                                 new Associate("12345678901"));
