@@ -1,3 +1,5 @@
+import { Button } from "./components/ui/button"
+
 function App() {
   return (
     <main className="min-h-screen bg-zinc-100 p-8">
@@ -8,6 +10,9 @@ function App() {
       <p className="mt-2 text-zinc-600">
         Frontend configurado com Tailwind CSS.
       </p>
+      <Button>
+        Teste
+      </Button>
     </main>
   )
 }
