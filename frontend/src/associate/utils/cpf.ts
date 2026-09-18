@@ -9,3 +9,11 @@ export const formatCpf = (value: string) => {
 export const removeCpfMask = (value: string) => {
   return value.replace(/\D/g, '')
 }
+
+export const maskCpf = (value: string) => {
+  const digits = removeCpfMask(value)
+  if (digits.length !== 11) {
+    return '***.***.***-**'
+  }
+  return `***.***.***-${digits.slice(-2)}`
+}
