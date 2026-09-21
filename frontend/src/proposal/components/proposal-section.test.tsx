@@ -13,11 +13,12 @@ import {
 
 import ProposalSection from './proposal-section'
 
-const useProposalsMock = vi.fn()
+const useProposalsManagementMock = vi.fn()
 const refetchMock = vi.fn()
 
-vi.mock('../hooks/use-proposals', () => ({
-  useProposals: () => useProposalsMock(),
+vi.mock('../hooks/use-proposals-management', () => ({
+  useProposalsManagement: () =>
+    useProposalsManagementMock(),
 }))
 
 vi.mock('./create-proposal-dialog', () => ({
@@ -34,16 +35,15 @@ describe('ProposalSection', () => {
   })
 
   it('should render registered proposals', () => {
-    useProposalsMock.mockReturnValue({
+    useProposalsManagementMock.mockReturnValue({
       data: [
         {
           id: 1,
-          title:
-            'Aquisição de novos equipamentos',
+          title: 'Aquisição de novos equipamentos',
           description:
             'Deliberação sobre novos equipamentos.',
-          createdAt:
-            '2026-09-21T10:00:00',
+          createdAt: '2026-09-21T10:00:00',
+          session: null,
         },
       ],
       isLoading: false,
@@ -64,10 +64,13 @@ describe('ProposalSection', () => {
     expect(
       screen.getByText('21/09/2026'),
     ).toBeInTheDocument()
+    expect(
+      screen.getByText(/sem sessão/i),
+    ).toBeInTheDocument()
   })
 
   it('should render loading state while proposals are loading', () => {
-    useProposalsMock.mockReturnValue({
+    useProposalsManagementMock.mockReturnValue({
       data: [],
       isLoading: true,
       isError: false,
@@ -82,7 +85,7 @@ describe('ProposalSection', () => {
   })
 
   it('should render empty state when there are no proposals', () => {
-    useProposalsMock.mockReturnValue({
+    useProposalsManagementMock.mockReturnValue({
       data: [],
       isLoading: false,
       isError: false,
@@ -99,7 +102,7 @@ describe('ProposalSection', () => {
   })
 
   it('should render error state when proposals cannot be loaded', () => {
-    useProposalsMock.mockReturnValue({
+    useProposalsManagementMock.mockReturnValue({
       data: [],
       isLoading: false,
       isError: true,
@@ -117,7 +120,7 @@ describe('ProposalSection', () => {
 
   it('should refetch proposals when retry button is clicked', async () => {
     const user = userEvent.setup()
-    useProposalsMock.mockReturnValue({
+    useProposalsManagementMock.mockReturnValue({
       data: [],
       isLoading: false,
       isError: true,
