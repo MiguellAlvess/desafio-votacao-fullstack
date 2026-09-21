@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.miguelalves.voting.proposal.dto.CreateProposalRequest;
+import br.com.miguelalves.voting.proposal.dto.ProposalManagementResponse;
 import br.com.miguelalves.voting.proposal.dto.ProposalResponse;
 import br.com.miguelalves.voting.proposal.service.ProposalService;
 import jakarta.validation.Valid;
@@ -50,5 +51,12 @@ public class ProposalController {
     @ApiResponse(responseCode = "200", description = "Pautas cadastradas")
     public ResponseEntity<List<ProposalResponse>> findAll() {
         return ResponseEntity.ok(proposalService.findAll());
+    }
+
+    @GetMapping("/management")
+    @Operation(summary = "Listar pautas para gestão")
+    @ApiResponse(responseCode = "200", description = "Pautas com informações da sessão")
+    public ResponseEntity<List<ProposalManagementResponse>> findAllForManagement() {
+        return ResponseEntity.ok(proposalService.findAllForManagement());
     }
 }

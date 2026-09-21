@@ -1,5 +1,6 @@
 package br.com.miguelalves.voting.proposal.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -7,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import br.com.miguelalves.voting.proposal.domain.Proposal;
 import br.com.miguelalves.voting.proposal.dto.CreateProposalRequest;
+import br.com.miguelalves.voting.proposal.dto.ProposalManagementResponse;
 import br.com.miguelalves.voting.proposal.dto.ProposalResponse;
 import br.com.miguelalves.voting.proposal.mapper.ProposalMapper;
 import br.com.miguelalves.voting.proposal.repository.ProposalRepository;
@@ -38,6 +40,15 @@ public class ProposalService {
         return proposalRepository.findAll()
                 .stream()
                 .map(proposalMapper::toResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProposalManagementResponse> findAllForManagement() {
+        var now = LocalDateTime.now();
+        return proposalRepository.findAllWithSession()
+                .stream()
+                .map(proposal -> proposalMapper.toManagementResponse(proposal, now))
                 .toList();
     }
 }
