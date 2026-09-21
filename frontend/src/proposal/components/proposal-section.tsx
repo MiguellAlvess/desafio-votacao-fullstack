@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button'
 
-import { useProposals } from '../hooks/use-proposal'
+import { useProposalsManagement } from '../hooks/use-proposals-management'
 import CreateProposalDialog from './create-proposal-dialog'
 import ProposalTable from './proposal-table'
 
@@ -10,7 +10,7 @@ const ProposalSection = () => {
     isLoading,
     isError,
     refetch,
-  } = useProposals()
+  } = useProposalsManagement()
 
   return (
     <section className="space-y-4">
@@ -19,6 +19,7 @@ const ProposalSection = () => {
           <h2 className="text-lg font-semibold">
             Pautas
           </h2>
+
           {!isLoading && !isError && (
             <p className="text-sm text-muted-foreground">
               {proposals.length}{' '}
@@ -38,16 +39,11 @@ const ProposalSection = () => {
           Carregando pautas...
         </p>
       )}
-
       {isError && (
         <div className="rounded-lg border border-dashed p-8 text-center">
           <h3 className="font-medium">
             Não foi possível carregar as pautas
           </h3>
-
-          <p className="mt-1 text-sm text-muted-foreground">
-            Tente novamente em alguns instantes.
-          </p>
 
           <Button
             variant="outline"
@@ -65,10 +61,6 @@ const ProposalSection = () => {
             <h3 className="font-medium">
               Nenhuma pauta cadastrada
             </h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Cadastre uma pauta para iniciar uma
-              votação.
-            </p>
           </div>
         )}
       {!isLoading &&
