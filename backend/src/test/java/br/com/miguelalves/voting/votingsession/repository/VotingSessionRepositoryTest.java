@@ -73,6 +73,25 @@ class VotingSessionRepositoryTest {
     }
 
     @Test
+    void shouldFindVotingSessionDetailsWithProposal() {
+        var proposal = proposalRepository.save(new Proposal(
+                "Annual budget approval",
+                "Voting for approval of the annual budget"));
+        var session = votingSessionRepository.save(new VotingSession(
+                proposal,
+                Duration.ofMinutes(5),
+                LocalDateTime.of(2026, 9, 21, 13, 0)));
+
+        var result = votingSessionRepository.findDetailsById(session.id());
+
+        assertThat(result).isPresent();
+        assertThat(result.get().proposal().id()).isEqualTo(proposal.id());
+        assertThat(result.get().proposal().title()).isEqualTo("Annual budget approval");
+        assertThat(result.get().proposal().description())
+                .isEqualTo("Voting for approval of the annual budget");
+    }
+
+    @Test
     void shouldCheckWhetherVotingSessionExistsByProposalId() {
         var proposal = proposalRepository.save(
                 new Proposal(

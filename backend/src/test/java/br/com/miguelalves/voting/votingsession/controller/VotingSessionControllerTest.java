@@ -20,6 +20,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import br.com.miguelalves.voting.core.exceptions.GlobalExceptionHandler;
 import br.com.miguelalves.voting.core.exceptions.ProposalNotFoundException;
 import br.com.miguelalves.voting.core.exceptions.VotingSessionAlreadyExistsException;
+import br.com.miguelalves.voting.core.exceptions.VotingSessionNotFoundException;
+import br.com.miguelalves.voting.votingsession.domain.VotingSessionStatus;
+import br.com.miguelalves.voting.votingsession.dto.VotingSessionDetailsResponse;
 import br.com.miguelalves.voting.votingsession.dto.VotingSessionResponse;
 import br.com.miguelalves.voting.votingsession.dto.OpenVotingSessionResponse;
 import br.com.miguelalves.voting.votingsession.service.VotingSessionService;
@@ -30,6 +33,7 @@ class VotingSessionControllerTest {
 
         private static final String ENDPOINT = "/api/v1/proposals/10/sessions";
         private static final String OPEN_ENDPOINT = "/api/v1/voting-sessions/open";
+        private static final String DETAILS_ENDPOINT = "/api/v1/voting-sessions/1";
 
         @Autowired
         private MockMvc mockMvc;
@@ -151,6 +155,48 @@ class VotingSessionControllerTest {
                 mockMvc.perform(get(OPEN_ENDPOINT))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.length()").value(0));
+        }
+
+        @Test
+        void shouldReturnVotingSessionById() throws Exception {
+                var response = new VotingSessionDetailsResponse(
+                                1L,
+                                10L,
+                                "Annual budget approval",
+                                "Voting for approval of the annual budget",
+                                LocalDateTime.of(2026, 9, 21, 13, 0),
+                                LocalDateTime.of(2026, 9, 21, 13, 5),
+                                VotingSessionStatus.OPEN);
+                when(votingSessionService.findById(1L)).thenReturn(response);
+
+                mockMvc.perform(get(DETAILS_ENDPOINT))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.id").value(1))
+                                .andExpect(jsonPath("$.proposalId").value(10))
+                                .andExpect(jsonPath("$.proposalTitle")
+                                                .value("Annual budget approval"))
+                                .andExpect(jsonPath("$.proposalDescription")
+                                                .value("Voting for approval of the annual budget"))
+                                .andExpect(jsonPath("$.startsAt")
+                                                .value("2026-09-21T13:00:00"))
+                                .andExpect(jsonPath("$.endsAt")
+                                                .value("2026-09-21T13:05:00"))
+                                .andExpect(jsonPath("$.status").value("OPEN"));
+        }
+
+        @Test
+        void shouldReturnNotFoundWhenVotingSessionDoesNotExist() throws Exception {
+                when(votingSessionService.findById(1L))
+                                .thenThrow(new VotingSessionNotFoundException(1L));
+
+                mockMvc.perform(get(DETAILS_ENDPOINT))
+                                .andExpect(status().isNotFound())
+                                .andExpect(jsonPath("$.status").value(404))
+                                .andExpect(jsonPath("$.error").value("Not Found"))
+                                .andExpect(jsonPath("$.message")
+                                                .value("Voting session with ID 1 was not found"))
+                                .andExpect(jsonPath("$.path").value(DETAILS_ENDPOINT))
+                                .andExpect(jsonPath("$.timestamp").exists());
         }
 
         private VotingSessionResponse createResponse(long durationInMinutes) {
