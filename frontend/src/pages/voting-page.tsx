@@ -1,3 +1,4 @@
+import axios from 'axios'
 import {
   ArrowLeft,
   Clock,
@@ -97,11 +98,22 @@ const VotingPage = () => {
           replace: true,
         },
       )
-    } catch {
-      toast.error(
-        'Ocorreu um erro ao registrar seu voto',
-      )
-    }
+    }catch (error) {
+      if (axios.isAxiosError(error)) {
+      const message = error.response?.data?.message as string | undefined
+      if (message?.includes('not eligible')) {
+        toast.error('Você não está elegível para votar')
+        return
+      }
+      if (message?.includes('invalid')) {
+        toast.error(
+          'O CPF informado não é válido para votação',
+        )
+        return
+      }
+  }
+  toast.error('Não foi possível registrar o voto')
+}
   }
 
   return (
