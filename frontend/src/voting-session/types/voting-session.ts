@@ -5,3 +5,13 @@ export type OpenVotingSession = {
   startsAt: string
   endsAt: string
 }
+export type OpenVotingSessionRequest = {
+  durationInMinutes?: number
+}
+
+export type VotingSessionResponse = {
+  id: number
+  proposalId: number
+  startsAt: string
+  endsAt: string
+}
