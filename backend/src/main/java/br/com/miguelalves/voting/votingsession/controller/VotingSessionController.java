@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.com.miguelalves.voting.votingsession.dto.OpenVotingSessionRequest;
 import br.com.miguelalves.voting.votingsession.dto.OpenVotingSessionResponse;
+import br.com.miguelalves.voting.votingsession.dto.VotingSessionDetailsResponse;
 import br.com.miguelalves.voting.votingsession.dto.VotingSessionResponse;
 import br.com.miguelalves.voting.votingsession.service.VotingSessionService;
 import jakarta.validation.Valid;
@@ -55,5 +56,15 @@ public class VotingSessionController {
     @ApiResponse(responseCode = "200", description = "Sessões abertas")
     public ResponseEntity<List<OpenVotingSessionResponse>> findOpenSessions() {
         return ResponseEntity.ok(votingSessionService.findOpenSessions());
+    }
+
+    @GetMapping("/voting-sessions/{id}")
+    @Operation(summary = "Consultar sessão de votação por ID")
+    @ApiResponse(responseCode = "200", description = "Sessão encontrada")
+    @ApiResponse(responseCode = "404", description = "Sessão não encontrada",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    public ResponseEntity<VotingSessionDetailsResponse> findById(
+            @PathVariable Long id) {
+        return ResponseEntity.ok(votingSessionService.findById(id));
     }
 }

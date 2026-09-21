@@ -11,10 +11,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import br.com.miguelalves.voting.core.exceptions.ProposalNotFoundException;
 import br.com.miguelalves.voting.core.exceptions.VotingSessionAlreadyExistsException;
+import br.com.miguelalves.voting.core.exceptions.VotingSessionNotFoundException;
 import br.com.miguelalves.voting.proposal.repository.ProposalRepository;
 import br.com.miguelalves.voting.votingsession.domain.VotingSession;
 import br.com.miguelalves.voting.votingsession.dto.OpenVotingSessionRequest;
 import br.com.miguelalves.voting.votingsession.dto.OpenVotingSessionResponse;
+import br.com.miguelalves.voting.votingsession.dto.VotingSessionDetailsResponse;
 import br.com.miguelalves.voting.votingsession.dto.VotingSessionResponse;
 import br.com.miguelalves.voting.votingsession.mapper.VotingSessionMapper;
 import br.com.miguelalves.voting.votingsession.repository.VotingSessionRepository;
@@ -70,5 +72,14 @@ public class VotingSessionService {
                 .stream()
                 .map(votingSessionMapper::toOpenResponse)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public VotingSessionDetailsResponse findById(Long id) {
+        var votingSession = votingSessionRepository.findDetailsById(id)
+                .orElseThrow(() -> new VotingSessionNotFoundException(id));
+        return votingSessionMapper.toDetailsResponse(
+                votingSession,
+                LocalDateTime.now());
     }
 }
