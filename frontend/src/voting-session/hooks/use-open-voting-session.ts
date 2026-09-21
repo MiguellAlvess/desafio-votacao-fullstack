@@ -20,14 +20,16 @@ export const useOpenVotingSession = () => {
       data,
     }: OpenVotingSessionVariables) =>
       VotingSessionService.open(proposalId, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['voting-sessions', 'open'],
-      })
-
-      queryClient.invalidateQueries({
-        queryKey: ['proposals'],
-      })
-    },
+onSuccess: () => {
+  queryClient.invalidateQueries({
+    queryKey: ['voting-sessions', 'open'],
+  })
+  queryClient.invalidateQueries({
+    queryKey: ['proposals'],
+  })
+  queryClient.invalidateQueries({
+    queryKey: ['proposals', 'management'],
+  })
+}
   })
 }

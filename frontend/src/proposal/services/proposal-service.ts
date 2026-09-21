@@ -2,6 +2,7 @@ import { api } from '@/lib/api'
 
 import type {
   CreateProposalRequest,
+  ProposalManagementResponse,
   ProposalResponse,
 } from '../types/proposal'
 
@@ -10,6 +11,15 @@ export const ProposalService = {
     const response = await api.get<ProposalResponse[]>('/proposals')
     return response.data
   },
+
+  getAllForManagement:
+    async (): Promise<ProposalManagementResponse[]> => {
+      const response =
+        await api.get<ProposalManagementResponse[]>(
+          '/proposals/management',
+        )
+      return response.data
+    },
 
   create: async (
     input: CreateProposalRequest,

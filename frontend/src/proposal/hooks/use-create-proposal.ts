@@ -13,10 +13,14 @@ export const useCreateProposal = () => {
     mutationKey: ['proposals', 'create'],
     mutationFn: (data: CreateProposalRequest) =>
       ProposalService.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['proposals'],
-      })
-    },
+  onSuccess: () => {
+  queryClient.invalidateQueries({
+    queryKey: ['proposals'],
+  })
+
+  queryClient.invalidateQueries({
+    queryKey: ['proposals', 'management'],
+  })
+},
   })
 }
