@@ -3,6 +3,7 @@ import { api } from '@/lib/api'
 import type {
   OpenVotingSession,
   OpenVotingSessionRequest,
+  VotingSessionDetails,
   VotingSessionResponse,
 } from '../types/voting-session'
 
@@ -10,6 +11,15 @@ export const VotingSessionService = {
   getOpenSessions: async (): Promise<OpenVotingSession[]> => {
     const response = await api.get<OpenVotingSession[]>(
       '/voting-sessions/open',
+    )
+    return response.data
+  },
+
+  getById: async (
+    id: number,
+  ): Promise<VotingSessionDetails> => {
+    const response = await api.get<VotingSessionDetails>(
+      `/voting-sessions/${id}`,
     )
     return response.data
   },

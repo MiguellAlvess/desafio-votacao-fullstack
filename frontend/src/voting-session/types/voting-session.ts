@@ -15,3 +15,15 @@ export type VotingSessionResponse = {
   startsAt: string
   endsAt: string
 }
+
+export type VotingSessionStatus = 'OPEN' | 'CLOSED'
+
+export type VotingSessionDetails = {
+  id: number
+  proposalId: number
+  proposalTitle: string
+  proposalDescription: string | null
+  startsAt: string
+  endsAt: string
+  status: VotingSessionStatus
+}
