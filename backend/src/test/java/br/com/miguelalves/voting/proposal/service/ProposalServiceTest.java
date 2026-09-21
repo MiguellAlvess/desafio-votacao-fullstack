@@ -1,5 +1,6 @@
 package br.com.miguelalves.voting.proposal.service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -17,6 +18,9 @@ import br.com.miguelalves.voting.proposal.dto.CreateProposalRequest;
 import br.com.miguelalves.voting.proposal.dto.ProposalResponse;
 import br.com.miguelalves.voting.proposal.mapper.ProposalMapper;
 import br.com.miguelalves.voting.proposal.repository.ProposalRepository;
+import br.com.miguelalves.voting.proposal.repository.ProposalWithSession;
+import br.com.miguelalves.voting.votingsession.domain.VotingSession;
+import br.com.miguelalves.voting.votingsession.domain.VotingSessionStatus;
 
 @ExtendWith(MockitoExtension.class)
 class ProposalServiceTest {
@@ -24,16 +28,13 @@ class ProposalServiceTest {
         @Mock
         private ProposalRepository proposalRepository;
 
-        @Mock
-        private ProposalMapper proposalMapper;
-
         private ProposalService proposalService;
 
         @BeforeEach
         void setUp() {
                 proposalService = new ProposalService(
                                 proposalRepository,
-                                proposalMapper);
+                                new ProposalMapper());
         }
 
         @Test
@@ -52,11 +53,11 @@ class ProposalServiceTest {
 
                 when(proposalRepository.save(any(Proposal.class)))
                                 .thenReturn(savedProposal);
-                when(proposalMapper.toResponse(savedProposal))
-                                .thenReturn(expectedResponse);
                 var result = proposalService.create(request);
 
-                assertThat(result).isEqualTo(expectedResponse);
+                assertThat(result.title()).isEqualTo(expectedResponse.title());
+                assertThat(result.description()).isEqualTo(expectedResponse.description());
+                assertThat(result.createdAt()).isEqualTo(expectedResponse.createdAt());
         }
 
         @Test
@@ -80,13 +81,76 @@ class ProposalServiceTest {
 
                 when(proposalRepository.findAll())
                                 .thenReturn(List.of(firstProposal, secondProposal));
-                when(proposalMapper.toResponse(firstProposal))
-                                .thenReturn(firstResponse);
-                when(proposalMapper.toResponse(secondProposal))
-                                .thenReturn(secondResponse);
-
                 var result = proposalService.findAll();
 
-                assertThat(result).containsExactly(firstResponse, secondResponse);
+                assertThat(result).extracting(ProposalResponse::title)
+                                .containsExactly(firstResponse.title(), secondResponse.title());
+        }
+
+        @Test
+        void shouldReturnProposalWithoutSession() {
+                var proposal = new Proposal("Without session", null);
+                when(proposalRepository.findAllWithSession())
+                                .thenReturn(List.of(new ProposalWithSession(proposal, null)));
+
+                var result = proposalService.findAllForManagement();
+
+                assertThat(result).singleElement().satisfies(response -> {
+                        assertThat(response.title()).isEqualTo("Without session");
+                        assertThat(response.session()).isNull();
+                });
+        }
+
+        @Test
+        void shouldReturnProposalWithOpenSession() {
+                var proposal = new Proposal("Open session", null);
+                var session = new VotingSession(proposal, Duration.ofMinutes(5), LocalDateTime.now());
+                when(proposalRepository.findAllWithSession())
+                                .thenReturn(List.of(new ProposalWithSession(proposal, session)));
+
+                var result = proposalService.findAllForManagement();
+
+                assertThat(result.getFirst().session().status()).isEqualTo(VotingSessionStatus.OPEN);
+        }
+
+        @Test
+        void shouldReturnProposalWithClosedSession() {
+                var proposal = new Proposal("Closed session", null);
+                var session = new VotingSession(
+                                proposal,
+                                Duration.ofMinutes(1),
+                                LocalDateTime.now().minusMinutes(2));
+                when(proposalRepository.findAllWithSession())
+                                .thenReturn(List.of(new ProposalWithSession(proposal, session)));
+
+                var result = proposalService.findAllForManagement();
+
+                assertThat(result.getFirst().session().status()).isEqualTo(VotingSessionStatus.CLOSED);
+        }
+
+        @Test
+        void shouldReturnAllProposalsForManagement() {
+                var withoutSession = new Proposal("Without session", null);
+                var openProposal = new Proposal("Open session", null);
+                var closedProposal = new Proposal("Closed session", null);
+                var openSession = new VotingSession(
+                                openProposal,
+                                Duration.ofMinutes(5),
+                                LocalDateTime.now());
+                var closedSession = new VotingSession(
+                                closedProposal,
+                                Duration.ofMinutes(1),
+                                LocalDateTime.now().minusMinutes(2));
+                when(proposalRepository.findAllWithSession()).thenReturn(List.of(
+                                new ProposalWithSession(withoutSession, null),
+                                new ProposalWithSession(openProposal, openSession),
+                                new ProposalWithSession(closedProposal, closedSession)));
+
+                var result = proposalService.findAllForManagement();
+
+                assertThat(result).hasSize(3);
+                assertThat(result.get(0).session()).isNull();
+                assertThat(result.get(1).session().status()).isEqualTo(VotingSessionStatus.OPEN);
+                assertThat(result.get(2).session().status()).isEqualTo(VotingSessionStatus.CLOSED);
         }
 }

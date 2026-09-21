@@ -19,8 +19,11 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import br.com.miguelalves.voting.core.exceptions.GlobalExceptionHandler;
+import br.com.miguelalves.voting.proposal.dto.ProposalManagementResponse;
 import br.com.miguelalves.voting.proposal.dto.ProposalResponse;
 import br.com.miguelalves.voting.proposal.service.ProposalService;
+import br.com.miguelalves.voting.votingsession.domain.VotingSessionStatus;
+import br.com.miguelalves.voting.votingsession.dto.VotingSessionSummaryResponse;
 
 @WebMvcTest(ProposalController.class)
 @Import(GlobalExceptionHandler.class)
@@ -116,5 +119,59 @@ class ProposalControllerTest {
                 .andExpect(jsonPath("$.path")
                         .value("/api/v1/proposals"))
                 .andExpect(jsonPath("$.timestamp").exists());
+    }
+
+    @Test
+    void shouldReturnProposalsForManagement() throws Exception {
+        var withoutSession = new ProposalManagementResponse(
+                1L,
+                "Proposal without session",
+                null,
+                LocalDateTime.of(2026, 9, 21, 9, 0),
+                null);
+        var openSession = new ProposalManagementResponse(
+                2L,
+                "Proposal with open session",
+                "Description",
+                LocalDateTime.of(2026, 9, 21, 9, 30),
+                new VotingSessionSummaryResponse(
+                        10L,
+                        VotingSessionStatus.OPEN,
+                        LocalDateTime.of(2026, 9, 21, 10, 0),
+                        LocalDateTime.of(2026, 9, 21, 10, 5)));
+        var closedSession = new ProposalManagementResponse(
+                3L,
+                "Proposal with closed session",
+                null,
+                LocalDateTime.of(2026, 9, 20, 9, 0),
+                new VotingSessionSummaryResponse(
+                        11L,
+                        VotingSessionStatus.CLOSED,
+                        LocalDateTime.of(2026, 9, 20, 10, 0),
+                        LocalDateTime.of(2026, 9, 20, 10, 5)));
+        when(proposalService.findAllForManagement())
+                .thenReturn(List.of(withoutSession, openSession, closedSession));
+
+        mockMvc.perform(get("/api/v1/proposals/management"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(3))
+                .andExpect(jsonPath("$[0].id").value(1))
+                .andExpect(jsonPath("$[0].session").doesNotExist())
+                .andExpect(jsonPath("$[1].session.id").value(10))
+                .andExpect(jsonPath("$[1].session.status").value("OPEN"))
+                .andExpect(jsonPath("$[1].session.startsAt").value("2026-09-21T10:00:00"))
+                .andExpect(jsonPath("$[1].session.endsAt").value("2026-09-21T10:05:00"))
+                .andExpect(jsonPath("$[2].session.id").value(11))
+                .andExpect(jsonPath("$[2].session.status").value("CLOSED"));
+    }
+
+    @Test
+    void shouldReturnEmptyListWhenThereAreNoProposals() throws Exception {
+        when(proposalService.findAllForManagement()).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/v1/proposals/management"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$").isEmpty());
     }
 }
