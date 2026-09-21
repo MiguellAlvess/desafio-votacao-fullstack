@@ -6,6 +6,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import OpenVotingSessionDialog from '@/voting-session/components/open-voting-session-dialog'
 
 import type { ProposalResponse } from '../types/proposal'
 import { formatProposalDate } from '../utils/proposal-date'
@@ -27,6 +28,9 @@ const ProposalTable = ({
             <TableHead className="w-36">
               Criada em
             </TableHead>
+            <TableHead className="w-36 text-right">
+              Ações
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -37,6 +41,7 @@ const ProposalTable = ({
                   <p className="font-medium">
                     {proposal.title}
                   </p>
+
                   {proposal.description && (
                     <p className="text-sm text-muted-foreground">
                       {proposal.description}
@@ -48,6 +53,12 @@ const ProposalTable = ({
                 {formatProposalDate(
                   proposal.createdAt,
                 )}
+              </TableCell>
+              <TableCell className="text-right">
+                <OpenVotingSessionDialog
+                  proposalId={proposal.id}
+                  proposalTitle={proposal.title}
+                />
               </TableCell>
             </TableRow>
           ))}
