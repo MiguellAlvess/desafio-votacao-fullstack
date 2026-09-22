@@ -29,6 +29,17 @@ vi.mock('./create-proposal-dialog', () => ({
   ),
 }))
 
+vi.mock(
+  '@/voting-session/components/ongoing-sessions-section',
+  () => ({
+    default: () => (
+      <div>
+        Sessões em andamento
+      </div>
+    ),
+  }),
+)
+
 describe('ProposalSection', () => {
   beforeEach(() => {
     vi.clearAllMocks()
