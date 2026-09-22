@@ -3,6 +3,7 @@ import { api } from '@/lib/api'
 import type {
   CreateVoteRequest,
   VoteResponse,
+  VotingResultResponse,
 } from '../types/vote'
 
 export const VoteService = {
@@ -14,6 +15,17 @@ export const VoteService = {
       `/voting-sessions/${votingSessionId}/votes`,
       input,
     )
+    return response.data
+  },
+
+  getResult: async (
+    votingSessionId: number,
+  ): Promise<VotingResultResponse> => {
+    const response =
+      await api.get<VotingResultResponse>(
+        `/voting-sessions/${votingSessionId}/result`,
+      )
+
     return response.data
   },
 }
