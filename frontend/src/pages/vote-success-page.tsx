@@ -1,6 +1,4 @@
-import {
-  CheckCircle2,
-} from 'lucide-react'
+import { CheckCircle2 } from 'lucide-react'
 import {
   Link,
   Navigate,
@@ -25,14 +23,14 @@ const VoteSuccessPage = () => {
     associateStorage.getId()
   const sessionId = Number(votingSessionId)
   if (!associateId) {
-    return <Navigate to="/" replace />
+    return <Navigate to="/"/>
   }
   if (
     !votingSessionId ||
     !Number.isInteger(sessionId) ||
     sessionId <= 0
   ) {
-    return <Navigate to="/votacoes" replace />
+    return <Navigate to="/votacoes"/>
   }
 
   return (
@@ -47,19 +45,31 @@ const VoteSuccessPage = () => {
             <h1 className="text-2xl font-semibold">
               Voto registrado
             </h1>
-
             <p className="mt-2 max-w-sm text-sm text-muted-foreground">
               Seu voto foi registrado com sucesso.
             </p>
-            <Link
-              to="/votacoes"
-              className={cn(
-                buttonVariants(),
-                'mt-6 w-full',
-              )}
-            >
-              Ver outras votações
-            </Link>
+            <div className="mt-6 flex w-full flex-col gap-3 sm:flex-row">
+              <Link
+                to="/votacoes"
+                className={cn(
+                  buttonVariants(),
+                  'flex-1',
+                )}
+              >
+                Ver outras votações
+              </Link>
+              <Link
+                to={`/votacoes/${sessionId}/resultado`}
+                className={cn(
+                  buttonVariants({
+                    variant: 'outline',
+                  }),
+                  'flex-1',
+                )}
+              >
+                Consultar resultado
+              </Link>
+            </div>
           </CardContent>
         </Card>
       </PageContent>
