@@ -31,8 +31,8 @@ vi.mock(
   }),
 )
 
-vi.mock('@/vote/hooks/use-cast-vote', () => ({
-  useCastVote: () => ({
+vi.mock('@/vote/hooks/use-vote', () => ({
+  useVote: () => ({
     mutateAsync: voteMock,
     isPending: false,
   }),
