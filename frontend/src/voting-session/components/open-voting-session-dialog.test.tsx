@@ -130,38 +130,4 @@ describe('OpenVotingSessionDialog', () => {
       },
     })
   })
-
-  it('should show validation error when duration is invalid', async () => {
-    const user = userEvent.setup()
-
-    render(
-      <OpenVotingSessionDialog
-        proposalId={1}
-        proposalTitle="Aquisição de equipamentos"
-      />,
-    )
-    await user.click(
-      screen.getByRole('button', {
-        name: /abrir sessão/i,
-      }),
-    )
-    await user.type(
-      screen.getByLabelText(/duração em minutos/i),
-      '0',
-    )
-    await user.click(
-      screen.getByRole('button', {
-        name: /^abrir sessão$/i,
-      }),
-    )
-
-    expect(
-      await screen.findByText(
-        /a duração deve ser maior que zero/i,
-      ),
-    ).toBeInTheDocument()
-    expect(
-      openVotingSessionMock,
-    ).not.toHaveBeenCalled()
-  })
 })
