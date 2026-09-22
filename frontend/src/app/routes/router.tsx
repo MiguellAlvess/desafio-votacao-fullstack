@@ -5,6 +5,7 @@ import ManagementPage from '@/pages/management-page'
 import OpenSessionsPage from '@/pages/open-sessions-page'
 import VoteSuccessPage from '@/pages/vote-success-page'
 import VotingPage from '@/pages/voting-page'
+import VotingResultPage from '@/pages/voting-result-page'
 
 import AppLayout from '../layouts/app-layout'
 
@@ -29,6 +30,10 @@ export function AppRouter() {
         <Route
           path="/votacoes/:votingSessionId/sucesso"
           element={<VoteSuccessPage />}
+        />
+        <Route
+        path="/votacoes/:votingSessionId/resultado"
+        element={<VotingResultPage />}
         />
       </Route>
     </Routes>
