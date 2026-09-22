@@ -145,10 +145,10 @@ describe('ProposalTable', () => {
     )
 
     expect(
-      screen.getByText(
+      screen.getAllByText(
         /revisão do fundo de reserva/i,
       ),
-    ).toBeInTheDocument()
+    ).toHaveLength(2)
     expect(
       screen.getByText(
         /análise da proposta de revisão/i,
