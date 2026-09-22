@@ -22,13 +22,14 @@ describe('VoteSuccessPage', () => {
       'associateId',
       '5',
     )
+
     sessionStorage.setItem(
       'associateCpf',
-      '12345678901',
+      '52998224725',
     )
   })
 
-  it('should render vote success message', () => {
+  it('should render vote success actions', () => {
     render(
       <MemoryRouter
         initialEntries={[
@@ -50,17 +51,20 @@ describe('VoteSuccessPage', () => {
       }),
     ).toBeInTheDocument()
     expect(
-      screen.getByText(
-        /seu voto foi registrado com sucesso/i,
-      ),
-    ).toBeInTheDocument()
-    expect(
       screen.getByRole('link', {
         name: /ver outras votações/i,
       }),
     ).toHaveAttribute(
       'href',
       '/votacoes',
+    )
+    expect(
+      screen.getByRole('link', {
+        name: /consultar resultado/i,
+      }),
+    ).toHaveAttribute(
+      'href',
+      '/votacoes/10/resultado',
     )
   })
 })
