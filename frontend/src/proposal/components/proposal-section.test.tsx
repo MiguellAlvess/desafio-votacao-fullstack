@@ -147,4 +147,48 @@ describe('ProposalSection', () => {
 
     expect(refetchMock).toHaveBeenCalledOnce()
   })
+
+  it('should filter proposals by title', async () => {
+    const user = userEvent.setup()
+    useProposalsManagementMock.mockReturnValue({
+      data: [
+        {
+          id: 1,
+          title: 'Aquisição de equipamentos',
+          description: null,
+          createdAt: '2026-09-22T10:00:00',
+          session: null,
+        },
+        {
+          id: 2,
+          title: 'Revisão do fundo de reserva',
+          description: null,
+          createdAt: '2026-09-22T10:00:00',
+          session: null,
+        },
+      ],
+      isLoading: false,
+      isError: false,
+      refetch: refetchMock,
+    })
+
+    render(<ProposalSection />)
+    await user.type(
+      screen.getByRole('searchbox', {
+        name: /buscar pauta por título/i,
+      }),
+      'fundo',
+    )
+
+    expect(
+      screen.getByText(
+        /revisão do fundo de reserva/i,
+      ),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByText(
+        /aquisição de equipamentos/i,
+      ),
+    ).not.toBeInTheDocument()
+  })
 })
