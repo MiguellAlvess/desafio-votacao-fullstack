@@ -49,8 +49,10 @@ backend/src/main/java/br/com/miguelalves/voting/
 | POST   | `/api/v1/associates/identify`                      | Identifica ou cria associado pelo CPF |
 | POST   | `/api/v1/proposals`                                | Cadastra pauta                        |
 | GET    | `/api/v1/proposals`                                | Lista pautas                          |
+| GET    | `/api/v1/proposals/management`                     | Lista pautas para gestão              |
 | POST   | `/api/v1/proposals/{proposalId}/sessions`          | Abre sessão para a pauta              |
 | GET    | `/api/v1/voting-sessions/open`                     | Lista sessões abertas                 |
+| GET    | `/api/v1/voting-sessions/{id}`                     | Consulta sessão por ID                |
 | POST   | `/api/v1/voting-sessions/{votingSessionId}/votes`  | Registra voto                         |
 | GET    | `/api/v1/voting-sessions/{votingSessionId}/result` | Consulta a apuração                   |
 
@@ -74,18 +76,10 @@ O CPF do exemplo é válido, mas a elegibilidade para votar é aleatória. O vot
 
 ## Fluxo principal
 
-1. O associado informa o CPF; a API identifica ou cria o cadastro.
+1. O associado informa o CPF, a API identifica ou cria o cadastro.
 2. O cliente consulta as sessões abertas e escolhe uma delas.
 3. Ao votar, a API verifica sessão, associado, duplicidade e elegibilidade.
 4. O resultado fica disponível pelo endpoint de apuração.
-
-## Decisões técnicas
-
-- Flyway versiona o esquema do PostgreSQL; o volume Docker preserva os dados entre reinicializações.
-- Há uma sessão por pauta e uma constraint única impede dois votos do mesmo associado na mesma sessão.
-- A apuração usa uma consulta agregada no banco, sem carregar todos os votos.
-- A elegibilidade usa uma interface e um client fake; CPF inválido ou não elegível retorna 404 no fluxo de voto.
-- A API usa `/api/v1`, erros padronizados e logs de negócio no stdout.
 
 ## Tarefas bônus
 
@@ -123,4 +117,4 @@ cd backend
 
 Os testes de repository usam PostgreSQL via Testcontainers. Há também testes unitários de domínio e service e testes web com MockMvc.
 
-O frontend ainda não foi implementado. O CORS atual permite `http://localhost:5173` para GET e POST em `/api/**`.
+O CORS permite que o frontend local em `http://localhost:5173` faça requisições GET e POST para `/api/**`.
