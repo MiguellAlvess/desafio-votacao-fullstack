@@ -58,7 +58,7 @@ describe('IdentifyAssociateForm', () => {
     )
 
     expect(
-      await screen.findByText(/11 dígitos/i),
+      await screen.findByText(/informe um cpf válido/i),
     ).toBeInTheDocument()
 
     expect(identifyAssociateMock).not.toHaveBeenCalled()
