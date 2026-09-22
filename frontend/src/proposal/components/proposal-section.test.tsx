@@ -40,6 +40,17 @@ vi.mock(
   }),
 )
 
+vi.mock(
+  '@/voting-session/components/open-voting-session-dialog',
+  () => ({
+    default: () => (
+      <button type="button">
+        Abrir sessão
+      </button>
+    ),
+  }),
+)
+
 describe('ProposalSection', () => {
   beforeEach(() => {
     vi.clearAllMocks()
