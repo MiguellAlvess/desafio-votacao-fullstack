@@ -86,7 +86,7 @@ O CPF do exemplo é válido, mas a elegibilidade para votar é aleatória. O vot
 | Bônus                   | Implementação                                                                             |
 | ----------------------- | ----------------------------------------------------------------------------------------- |
 | Integração externa fake | `AssociateEligibilityClient` e `FakeAssociateEligibilityClient`; sem chamada HTTP externa |
-| Performance             | Contagem agregada de votos no banco; sem benchmark ou teste de carga                      |
+| Performance             | k6 com banco isolado `voting_perf_db`; [detalhes](../performance/README.md)                 |
 | Versionamento           | Prefixo `/api/v1`                                                                         |
 
 ## Execução local
