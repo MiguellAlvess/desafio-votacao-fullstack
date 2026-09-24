@@ -2,6 +2,7 @@ import { Route, Routes } from 'react-router-dom'
 
 import IdentifyPage from '@/pages/identify-page'
 import ManagementPage from '@/pages/management-page'
+import NotFoundPage from '@/pages/not-found'
 import OpenSessionsPage from '@/pages/open-sessions-page'
 import VoteSuccessPage from '@/pages/vote-success-page'
 import VotingPage from '@/pages/voting-page'
@@ -23,7 +24,7 @@ export function AppRouter() {
           path="/gestao"
           element={<ManagementPage />}
         />
-                <Route
+        <Route
           path="/votacoes/:votingSessionId"
           element={<VotingPage />}
         />
@@ -36,6 +37,7 @@ export function AppRouter() {
         element={<VotingResultPage />}
         />
       </Route>
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   )
 }
