@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5433/voting_perf_db
+
+  devtools:
+    add-properties: false
+
+logging:
+  level:
+    root: WARN

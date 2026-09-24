@@ -3,11 +3,13 @@ package br.com.miguelalves.voting.external.eligibility;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BooleanSupplier;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import br.com.miguelalves.voting.core.exceptions.InvalidCpfException;
 
 @Component
+@Profile("!perf")
 public class FakeAssociateEligibilityClient implements AssociateEligibilityClient {
 
     private final CpfValidator cpfValidator;
