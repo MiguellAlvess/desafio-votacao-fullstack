@@ -11,5 +11,29 @@ services:
     volumes:
       - voting-data:/var/lib/postgresql/data
 
+  postgres-performance:
+    image: postgres:17
+    container_name: voting-postgres-performance
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: voting_perf_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - voting-performance-data:/var/lib/postgresql/data
+
+  k6:
+    image: grafana/k6:latest
+    profiles:
+      - performance
+    volumes:
+      - ./performance:/scripts:ro
+    environment:
+      BASE_URL: http://host.docker.internal:8080/api/v1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
 volumes:
   voting-data:
+  voting-performance-data:
