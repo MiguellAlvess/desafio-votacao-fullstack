@@ -13,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import static org.mockito.ArgumentMatchers.any;
 import org.mockito.Mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -160,6 +161,9 @@ class VotingSessionServiceTest {
 
                 assertThat(responses).containsExactly(firstResponse, secondResponse);
                 var time = ArgumentCaptor.forClass(LocalDateTime.class);
+                verify(votingSessionRepository)
+                                .findAllByStartsAtLessThanEqualAndEndsAtAfter(
+                                                time.capture(), time.capture());
                 assertThat(time.getAllValues().get(0))
                                 .isEqualTo(time.getAllValues().get(1));
         }
