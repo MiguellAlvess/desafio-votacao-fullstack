@@ -4,7 +4,7 @@ export default {
     "scope-enum": [
       2,
       "always",
-      ["backend", "frontend", "docker", "docs", "ci", "config"],
+      ["backend", "frontend", "docker", "performance"],
     ],
   },
 };
